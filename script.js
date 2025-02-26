@@ -1,7 +1,6 @@
 async function getCurrentTabInfo() {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-  const tab = tabs[0];
-  return tab;
+  return tabs[0];
 }
 
 async function getAllCookies(url) {
@@ -14,24 +13,19 @@ async function getAllCookies(url) {
 
 async function getTransactionId(url) {
   try {
-    if (!url.includes('revolut.com')) {
-      return null;
-    }
+    if (!url.includes('revolut.com')) return null;
 
     const urlObj = new URL(url);
     const pathParts = urlObj.pathname.split("/");
     const transactionIndex = pathParts.indexOf("transactions");
 
     let transactionId = null;
-
     if (transactionIndex !== -1 && pathParts[transactionIndex + 1]) {
       transactionId = pathParts[transactionIndex + 1];
     }
-
     if (!transactionId) {
       transactionId = urlObj.searchParams.get("transactionId");
     }
-
     return transactionId;
   } catch (e) {
     console.error("Error parsing URL:", e);
@@ -44,7 +38,6 @@ async function getHeaders() {
   const cookies = await getAllCookies('https://app.revolut.com');
   const headers = {};
 
-  // Get headers from request
   if (tab.url && tab.url.includes('revolut.com')) {
     headers['x-device-id'] = cookies.revo_device_id || '';
     headers['sec-ch-ua'] = navigator.userAgent.split('Chrome/')[1]?.split(' ')[0] || '';
@@ -62,80 +55,22 @@ async function getHeaders() {
     headers['sec-fetch-mode'] = 'cors';
     headers['sec-fetch-dest'] = 'empty';
     headers['referer'] = tab.url;
-    headers['cookie'] = Object.entries(cookies)
-      .map(([name, value]) => `${name}=${value}`)
-      .join('; ');
+    headers['cookie'] = Object.entries(cookies).map(([name, value]) => `${name}=${value}`).join('; ');
   }
 
-  // Remove empty headers
   Object.keys(headers).forEach(key => {
-    if (!headers[key]) {
-      delete headers[key];
-    }
+    if (!headers[key]) delete headers[key];
   });
 
   return headers;
 }
 
-// const curlButtonListener = async () => {
-//   const messageDiv = document.getElementById("message");
-//   try {
-//     const tab = await getCurrentTabInfo();
-//     const transactionId = await getTransactionId(tab.url);
-
-//     if (!transactionId) {
-//       messageDiv.textContent = "No transaction ID available.";
-//       messageDiv.style.color = "red";
-//       return;
-//     }
-
-//     const headers = await getHeaders();
-//     const apiUrl = `https://app.revolut.com/api/retail/transaction/${transactionId}`;
-//     const headerStr = Object.entries(headers)
-//       .map(([name, value]) => `-H '${name}: ${value}'`)
-//       .join(" ");
-//     const command = `curl ${headerStr} '${apiUrl}'`;
-
-//     await navigator.clipboard.writeText(command);
-//     messageDiv.textContent = "Command copied to clipboard!";
-//     messageDiv.style.color = "green";
-//   } catch (err) {
-//     console.error('Error:', err);
-//     messageDiv.textContent = "Failed to copy command.";
-//     messageDiv.style.color = "red";
-//   }
-// };
-
-// const proveButtonListener = async () => {
-//   const messageDiv = document.getElementById("message");
-//   try {
-//     const tab = await getCurrentTabInfo();
-//     const transactionId = await getTransactionId(tab.url);
-
-//     if (!transactionId) {
-//       messageDiv.textContent = "No transaction ID available.";
-//       messageDiv.style.color = "red";
-//       return;
-//     }
-
-//     const headers = await getHeaders();
-//     const apiUrl = `https://app.revolut.com/api/retail/transaction/${transactionId}`;
-//     const headerStr = Object.entries(headers)
-//       .map(([name, value]) => `-H '${name}: ${value}'`)
-//       .join(" ");
-//     const command = `cargo run -r -p prover -- ${headerStr} '${apiUrl}'`;
-
-//     await navigator.clipboard.writeText(command);
-//     messageDiv.textContent = "Command copied to clipboard!";
-//     messageDiv.style.color = "green";
-//   } catch (err) {
-//     messageDiv.textContent = "Failed to copy command.";
-//     messageDiv.style.color = "red";
-//   }
-// };
-
 const nativeButtonListener = async () => {
   const messageDiv = document.getElementById("message");
+  const transactionDiv = document.getElementById("transaction");
+  const logContainer = document.getElementById("logContainer");
+  const logMessage = document.getElementById("logMessage");
+
   try {
     const tab = await getCurrentTabInfo();
     const transactionId = await getTransactionId(tab.url);
@@ -143,103 +78,101 @@ const nativeButtonListener = async () => {
     if (!transactionId) {
       messageDiv.textContent = "No transaction ID available.";
       messageDiv.style.color = "red";
+      messageDiv.style.display = "block";
       return;
     }
 
     const headers = await getHeaders();
     const apiUrl = `https://app.revolut.com/api/retail/transaction/${transactionId}`;
-    
-    const headersList = Object.entries(headers)
-      .map(([name, value]) => `${name}: ${value}`);
 
-      const response = await fetch(apiUrl, {
-        method: "GET",
-        headers: headers,
-      });
-  
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-  
-      const responseData = await response.json();
-  
-      if (!responseData || responseData.length === 0) {
-        messageDiv.textContent = "No transaction data found.";
-        messageDiv.style.color = "red";
-        return;
-      }
-      const transaction = responseData[0];
-  
-      const currency = transaction.currency || "N/A";
-      const amount = transaction.amount || "N/A";
-      const description = transaction.description || "No description available";
+    const response = await fetch(apiUrl, { method: "GET", headers });
 
-      const messageText = `
-        Recieved transaction:
-        ID: ${transaction.id}
-        Currency: ${currency}
-        Amount: ${amount / 100} ${currency}
-        Description: ${description}
-      `;
-  
-      messageDiv.innerHTML = messageText.replace(/\n/g, "<br>");
-      messageDiv.style.color = "blue";
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const responseData = await response.json();
+    if (!responseData || responseData.length === 0) {
+      messageDiv.textContent = "No transaction data found.";
+      messageDiv.style.color = "red";
+      messageDiv.style.display = "block";
+      return;
+    }
+
+    const transaction = responseData[0];
+    const currency = transaction.currency || "N/A";
+    const amount = transaction.amount || "N/A";
+    const description = transaction.description || "No description available";
+
+    transactionDiv.innerHTML = `
+      <strong>Transaction ID:</strong> ${transaction.id}<br>
+      <strong>Currency:</strong> ${currency}<br>
+      <strong>Amount:</strong> ${amount / 100} ${currency}<br>
+      <strong>Description:</strong> ${description}
+    `;
+    transactionDiv.style.display = "block";
+
+    // Aktualizowanie statusu
+    updateStatus("Processing transaction...", "status-warning");
 
     const data = {
       server_uri: apiUrl,
       verifier_address: "81.219.135.164:30079",
-      headers: headersList,
+      headers: Object.entries(headers).map(([name, value]) => `${name}: ${value}`),
       max_sent_data: 4096,
       max_recv_data: 16384,
     };
 
-    // send to background script
-    chrome.runtime.sendMessage({
-      type: "nativeMessage",
-      data: data
-    }, response => {
+    chrome.runtime.sendMessage({ type: "nativeMessage", data }, response => {
       if (chrome.runtime.lastError) {
         console.error(chrome.runtime.lastError);
-        messageDiv.textContent = "Error sending to native app";
-        messageDiv.style.color = "red";
+        updateStatus("Error sending to native app", "status-error");
         return;
       }
       if (response.status === "error") {
-        messageDiv.textContent = response.message || "Error in native app";
-        messageDiv.style.color = "red";
+        updateStatus("Error: " + (response.message || "Unknown issue"), "status-error");
         return;
       }
-      console.log(response);
-      // messageDiv.textContent = "Sent to native app!";
-      // messageDiv.style.color = "green";
-
-      // Clear logs after sending message
-      const logContainer = document.getElementById("logContainer");
-      logContainer.innerHTML = '';
     });
 
   } catch (err) {
     console.error('Error:', err);
     messageDiv.textContent = "Failed to send to native app.";
     messageDiv.style.color = "red";
-    logContainer.innerHTML = '';
+    messageDiv.style.display = "block";
+    updateStatus("Transaction failed.", "status-error");
   }
+};
+
+// Funkcja do aktualizacji statusu z odpowiednim kolorem
+const updateStatus = (message, statusClass) => {
+  const logMessage = document.getElementById("logMessage");
+  const logContainer = document.getElementById("logContainer");
+
+  logMessage.textContent = message;
+
+  // Resetowanie klas
+  logContainer.classList.remove("status-success", "status-warning", "status-error");
+
+  // Dodanie odpowiedniego koloru
+  logContainer.classList.add(statusClass);
 };
 
 const messageListener = (message) => {
   if (message.type === "nativeResponse") {
-    const logContainer = document.getElementById("logContainer");
-
     if (message.data.type === "Logging") {
-      logContainer.textContent = `Status: ${message.data.message.logging}`;
+      const logText = message.data.message.logging;
 
-      if (message.data.message.logging === "Prover done successfully") {
-        logContainer.style.color = "green";
+      console.log("Logging:", logText);
+
+      // Wybór koloru w zależności od treści wiadomości
+      if (logText.includes("successfully")) {
+        updateStatus(logText, "status-success"); // Zielony
+      } else if (logText.includes("failed")) {
+        updateStatus(logText, "status-error"); 
       } else {
-        logContainer.style.color = "orange";
+        updateStatus(logText, "status-warning"); 
       }
-
-      console.log("Logging:", message.data.message.logging);
     }
   }
 };
@@ -251,16 +184,5 @@ window.addEventListener('unload', () => {
 });
 
 document.addEventListener("DOMContentLoaded", function () {
-  // const curlButton = document.getElementById("curl");
-  // const proveButton = document.getElementById("prove");
-  const nativeButton = document.getElementById("native");
-
-  // curlButton.addEventListener("click", curlButtonListener);
-  // proveButton.addEventListener("click", proveButtonListener);
-  nativeButton.addEventListener("click", nativeButtonListener);
-
-  // Add log container dynamically
-  const logContainer = document.createElement('div');
-  logContainer.id = 'logContainer';
-  document.body.appendChild(logContainer);
+  document.getElementById("native").addEventListener("click", nativeButtonListener);
 });
