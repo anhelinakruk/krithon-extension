@@ -1,0 +1,22 @@
+{
+  "name": "Krithon",
+  "description": "Base Level Extension",
+  "version": "1.0",
+  "manifest_version": 3,
+  "action": {
+    "default_popup": "index.html"
+  },
+  "permissions": [
+    "activeTab",
+    "sidePanel", 
+    "storage", 
+    "tabs",
+    "cookies",
+    "nativeMessaging"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAy79n/GakF9xKeyHpeno9IRUB7EkeURGMs/nvcJN/pxT0JFV5gSMGgKyKB3cqqRy9InyDzROof3dXbnw2CLM50hKmtxkp/GqOcdeC6qSMqlFKHttsML0etWVtrGxTC54JgJsGCGGM5wYNDO+ezc8i6QWTiYR4r5fyIMu2vdBti+Bw+j6qc/MVTOh3cgRauRA9PzsrM4gWxOCgs3vQ29/GamsePLSoM6VlRPBdsobV7FaCb3W2j/Xzqt8bUSjaSt6RNrVgaHVGJhboeQj2szVZcWzy3PzspuNci+RU5Jb9bC5whtQsKaiYazmz8jISto7DUywxKBMefFcB5xG4azuRpQIDAQAB",
+  "host_permissions": ["<all_urls>"]
+}

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Krithon Extension</h1>
+    
+  <div class="instructions">
+      <strong>How to use:</strong>
+      <ol>
+          <li>Go to <a href="https://app.revolut.com" target="_blank">Revolut</a>.</li>
+          <li>Select a transaction.</li>
+          <li>Click "Process" to process the transaction.</li>
+      </ol>
+  </div>
+
+  <button id="native" class="btn btn-primary">Process</button>
+
+  <div id="message" class="message" style="display: none;"></div>
+  <div id="transaction" class="transaction" style="display: none;"></div>
+  
+  <div><strong>Status:</strong></div>
+  <div id="logContainer" class="log-container">
+      <span id="logMessage">Waiting for transaction...</span>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
