@@ -144,17 +144,14 @@ const nativeButtonListener = async () => {
   }
 };
 
-// Funkcja do aktualizacji statusu z odpowiednim kolorem
 const updateStatus = (message, statusClass) => {
   const logMessage = document.getElementById("logMessage");
   const logContainer = document.getElementById("logContainer");
 
   logMessage.textContent = message;
 
-  // Resetowanie klas
   logContainer.classList.remove("status-success", "status-warning", "status-error");
 
-  // Dodanie odpowiedniego koloru
   logContainer.classList.add(statusClass);
 };
 
@@ -165,9 +162,8 @@ const messageListener = (message) => {
 
       console.log("Logging:", logText);
 
-      // Wybór koloru w zależności od treści wiadomości
       if (logText.includes("successfully")) {
-        updateStatus(logText, "status-success"); // Zielony
+        updateStatus(logText, "status-success"); 
       } else if (logText.includes("failed")) {
         updateStatus(logText, "status-error"); 
       } else {
